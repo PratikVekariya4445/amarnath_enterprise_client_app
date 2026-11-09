@@ -22,6 +22,9 @@ class DatabasePaths {
   /// Node for client signup requests (`amarntath_enterprise/signupRequests`).
   static String get signupRequests => '$root/signupRequests';
 
+  /// Specific signup request record path (`amarntath_enterprise/signupRequests/{requestId}`).
+  static String signupRequest(String requestId) => '$signupRequests/$requestId';
+
   /// Node for product catalog (`amarntath_enterprise/products`).
   static String get products => '$root/products';
 

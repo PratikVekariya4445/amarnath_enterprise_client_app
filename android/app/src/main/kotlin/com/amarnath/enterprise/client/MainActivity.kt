@@ -1,4 +1,4 @@
-package com.example.amarnath_enterprise_client_app
+package com.amarnath.enterprise.client
 
 import io.flutter.embedding.android.FlutterActivity
 

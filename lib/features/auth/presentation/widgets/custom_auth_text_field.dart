@@ -14,6 +14,7 @@ class CustomAuthTextField extends StatelessWidget {
     this.controller,
     this.keyboardType,
     this.obscureText = false,
+    this.maxLines = 1,
     this.trailing,
     this.validator,
     this.inputFormatters,
@@ -29,6 +30,7 @@ class CustomAuthTextField extends StatelessWidget {
   final TextEditingController? controller;
   final TextInputType? keyboardType;
   final bool obscureText;
+  final int maxLines;
   final Widget? trailing;
   final String? Function(String?)? validator;
   final List<TextInputFormatter>? inputFormatters;
@@ -59,13 +61,18 @@ class CustomAuthTextField extends StatelessWidget {
             vertical: 10.dp,
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: maxLines > 1
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
             children: [
               // Leading Icon in Brand Dark Green
-              Icon(
-                leadingIcon,
-                color: AppColors.primaryDarkGreen,
-                size: 24.dp,
+              Padding(
+                padding: EdgeInsets.only(top: maxLines > 1 ? 4.dp : 0),
+                child: Icon(
+                  leadingIcon,
+                  color: AppColors.primaryDarkGreen,
+                  size: 24.dp,
+                ),
               ),
               SizedBox(width: 14.dp),
 
@@ -89,6 +96,7 @@ class CustomAuthTextField extends StatelessWidget {
                       controller: controller,
                       keyboardType: keyboardType,
                       obscureText: obscureText,
+                      maxLines: maxLines,
                       validator: validator,
                       inputFormatters: inputFormatters,
                       onChanged: onChanged,

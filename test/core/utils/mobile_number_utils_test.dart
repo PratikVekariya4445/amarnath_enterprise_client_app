@@ -6,21 +6,65 @@ void main() {
     test('normalizes 10-digit mobile number to E.164 and 10-digit subscriber', () {
       expect(MobileNumberUtils.normalizeToE164('9876543210'), '+919876543210');
       expect(MobileNumberUtils.normalizeMobile('9876543210'), '9876543210');
+      expect(MobileNumberUtils.normalizeMobileNumber('9876543210'), '9876543210');
     });
 
     test('normalizes numbers with spaces, hyphens, and +91 prefix', () {
       expect(MobileNumberUtils.normalizeToE164('+91 98765-43210'), '+919876543210');
       expect(MobileNumberUtils.normalizeMobile('+91 98765 43210'), '9876543210');
+      expect(MobileNumberUtils.normalizeMobileNumber('+91 84698 00185'), '8469800185');
     });
 
-    test('generates Firebase pseudo-email identity', () {
+    test('verifies Client authentication email format convention', () {
       expect(
-        MobileNumberUtils.generateFirebaseEmail('9876543210'),
-        '9876543210@amarnath-enterprise.app',
+        MobileNumberUtils.clientAuthEmailDomain,
+        '@amarnath-enterprise-client.app',
       );
       expect(
-        MobileNumberUtils.generateFirebaseEmail('+91 9123456789'),
-        '9123456789@amarnath-enterprise.app',
+        MobileNumberUtils.generateClientAuthEmail('8469800185'),
+        '8469800185@amarnath-enterprise-client.app',
+      );
+      expect(
+        MobileNumberUtils.generateClientAuthEmail('+91 84698 00185'),
+        '8469800185@amarnath-enterprise-client.app',
+      );
+      expect(
+        MobileNumberUtils.generateClientAuthEmail('9876543210'),
+        '9876543210@amarnath-enterprise-client.app',
+      );
+    });
+
+    test('verifies Owner authentication email convention remains distinct', () {
+      expect(
+        MobileNumberUtils.ownerAuthEmailDomain,
+        '@amarnath-enterprise.app',
+      );
+      expect(
+        MobileNumberUtils.generateOwnerAuthEmail('8469800185'),
+        '8469800185@amarnath-enterprise.app',
+      );
+      expect(
+        MobileNumberUtils.generateOwnerAuthEmail('+91 84698 00185'),
+        '8469800185@amarnath-enterprise.app',
+      );
+    });
+
+    test('verifies legacy Client authentication fallback email format', () {
+      expect(
+        MobileNumberUtils.legacyClientAuthEmailDomain,
+        '@amarnath-enterprise.app',
+      );
+      expect(
+        MobileNumberUtils.generateLegacyClientAuthEmail('8469800185'),
+        '8469800185@amarnath-enterprise.app',
+      );
+    });
+
+    test('backward-compatibility alias generateFirebaseEmail generates Client email', () {
+      // ignore: deprecated_member_use_from_same_package
+      expect(
+        MobileNumberUtils.generateFirebaseEmail('8469800185'),
+        '8469800185@amarnath-enterprise-client.app',
       );
     });
 
@@ -29,6 +73,7 @@ void main() {
       expect(MobileNumberUtils.isValidMobile('8876543210'), isTrue);
       expect(MobileNumberUtils.isValidMobile('7876543210'), isTrue);
       expect(MobileNumberUtils.isValidMobile('6876543210'), isTrue);
+      expect(MobileNumberUtils.isValidMobile('8469800185'), isTrue);
 
       // Invalid starts (1-5)
       expect(MobileNumberUtils.isValidMobile('5876543210'), isFalse);

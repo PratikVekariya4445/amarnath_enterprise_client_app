@@ -2,7 +2,21 @@
 class MobileNumberUtils {
   MobileNumberUtils._();
 
-  static const String firebaseEmailDomain = '@amarnath-enterprise.app';
+  /// Client Firebase Email/Password domain convention.
+  static const String clientAuthEmailDomain = '@amarnath-enterprise-client.app';
+
+  /// Owner Firebase Email/Password domain convention.
+  /// Kept separate for the Owner app and verified in tests.
+  static const String ownerAuthEmailDomain = '@amarnath-enterprise.app';
+
+  /// Legacy Client Firebase Email/Password domain convention.
+  /// Used for fallback authentication of existing accounts.
+  static const String legacyClientAuthEmailDomain = '@amarnath-enterprise.app';
+
+  /// Deprecated alias to [clientAuthEmailDomain].
+  @Deprecated('Use clientAuthEmailDomain instead')
+  static const String firebaseEmailDomain = clientAuthEmailDomain;
+
   static const String indianMobileValidationMessage =
       'Enter a valid 10-digit Indian mobile number.';
 
@@ -58,6 +72,9 @@ class MobileNumberUtils {
     return e164.substring(3);
   }
 
+  /// Alias for [normalizeMobile] ensuring exact naming alignment with shared auth conventions.
+  static String normalizeMobileNumber(String input) => normalizeMobile(input);
+
   /// Centralized validation method returning user-friendly error messages or null if valid.
   static String? validateMobile(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -79,10 +96,44 @@ class MobileNumberUtils {
     return validateMobile(value) == null;
   }
 
-  /// Generates the internal Firebase Email/Password identifier using the normalized mobile number.
-  /// Format: `${normalizedMobileDigits}@amarnath-enterprise.app`
-  static String generateFirebaseEmail(String mobile) {
-    final normalized = normalizeMobile(mobile);
-    return '$normalized$firebaseEmailDomain';
+  /// Generates the Client Firebase Email/Password identifier using the normalized mobile number.
+  /// Format: `${normalizedMobileDigits}@amarnath-enterprise-client.app`
+  static String generateClientAuthEmail(String mobile) {
+    final normalizedMobile = normalizeMobileNumber(mobile);
+    return '$normalizedMobile$clientAuthEmailDomain';
   }
+
+  /// Generates the Owner Firebase Email/Password identifier.
+  /// Format: `${normalizedMobileDigits}@amarnath-enterprise.app`
+  ///
+  /// Kept separate for the Owner app.
+  static String generateOwnerAuthEmail(String mobile) {
+    final normalizedMobile = normalizeMobileNumber(mobile);
+    return '$normalizedMobile$ownerAuthEmailDomain';
+  }
+
+  /// Generates the legacy Client Firebase Email/Password identifier.
+  /// Format: `${normalizedMobileDigits}@amarnath-enterprise.app`
+  ///
+  /// Used solely for graceful fallback login for previously registered client accounts.
+  static String generateLegacyClientAuthEmail(String mobile) {
+    final normalizedMobile = normalizeMobileNumber(mobile);
+    return '$normalizedMobile$legacyClientAuthEmailDomain';
+  }
+
+  /// Formats an Indian mobile number for clean display (e.g. `+91 98765 43210`).
+  static String formatForDisplay(String input) {
+    try {
+      final e164 = normalizeToE164(input);
+      final sub = e164.substring(3);
+      return '+91 ${sub.substring(0, 5)} ${sub.substring(5)}';
+    } catch (_) {
+      return input;
+    }
+  }
+
+  /// Backward-compatible alias for [generateClientAuthEmail].
+  @Deprecated('Use generateClientAuthEmail instead')
+  static String generateFirebaseEmail(String mobile) =>
+      generateClientAuthEmail(mobile);
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:amarnath_enterprise_client_app/core/utils/responsive_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:amarnath_enterprise_client_app/features/auth/data/models/client_model.dart';
 import 'package:amarnath_enterprise_client_app/features/auth/presentation/login_screen.dart';
 import 'package:amarnath_enterprise_client_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:amarnath_enterprise_client_app/core/errors/auth_error_mapper.dart';
@@ -27,7 +28,66 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> registerClient({
+    required String name,
+    required String shopName,
+    required String mobile,
+    required String address,
+    required String password,
+  }) async {
+    if (exceptionToThrow != null) {
+      throw exceptionToThrow!;
+    }
+  }
+
+  @override
+  Future<void> sendPasswordResetOtp({
+    required String mobile,
+    required void Function(String verificationId, int? resendToken) onCodeSent,
+    required void Function(String errorMessage) onVerificationFailed,
+    void Function(PhoneAuthCredential credential)? onVerificationCompleted,
+    int? forceResendingToken,
+  }) async {
+    if (exceptionToThrow != null) {
+      throw exceptionToThrow!;
+    }
+  }
+
+  @override
   Future<User?> getCurrentApprovedClient() async => null;
+
+  @override
+  Future<SessionValidationResult> validateStartupSession() async {
+    return const SessionValidationResult(status: SessionStatus.unauthenticated);
+  }
+
+  @override
+  Future<ClientModel?> getCurrentClientProfile() async => null;
+
+  @override
+  Future<void> updateClientProfile({
+    required String name,
+    required String companyName,
+    required String address,
+  }) async {}
+
+  @override
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {}
+
+  @override
+  Future<PhoneAuthCredential> verifyPasswordResetOtp({
+    required String verificationId,
+    required String smsCode,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<void> resetClientPasswordWithVerifiedPhone({
+    required String mobile,
+    required String newPassword,
+  }) async {}
 
   @override
   Future<void> signOut() async {}
@@ -48,6 +108,9 @@ class MockAuthRepository implements AuthRepository {
   Future<({bool remember, String mobile})> getRememberMe() async {
     return (remember: savedRemember, mobile: savedMobile);
   }
+
+  @override
+  Future<String> getOwnerContactNumber() async => '+919876543210';
 }
 
 Widget _createTestableLoginScreen({
@@ -255,10 +318,48 @@ void main() {
       expect(mockRepo.loginCalled, isTrue);
       expect(
         find.text(
-          'Your account approval is pending. Please wait for administrator verification.',
+          'Your registration is still awaiting Owner approval. You can log in once your account has been approved.',
         ),
         findsOneWidget,
       );
+      expect(find.text('Contact Owner'), findsOneWidget);
+    });
+
+    testWidgets('displays rejected dialog when client account is rejected', (
+      WidgetTester tester,
+    ) async {
+      final mockRepo = MockAuthRepository()
+        ..exceptionToThrow = ClientNotApprovedException('rejected');
+
+      await tester.pumpWidget(
+        _createTestableLoginScreen(authRepository: mockRepo),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Enter your mobile number'),
+        '9876543210',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Enter your password'),
+        'secret123',
+      );
+
+      final loginBtn = find.text('Login');
+      await tester.ensureVisible(loginBtn);
+      await tester.tap(loginBtn);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(mockRepo.loginCalled, isTrue);
+      expect(
+        find.text(
+          'Your registration request has not been approved. Please contact Amarnath Enterprise for assistance.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Call Owner'), findsOneWidget);
+      expect(find.text('WhatsApp Us'), findsOneWidget);
     });
 
     testWidgets('triggers onForgotPassword callback', (

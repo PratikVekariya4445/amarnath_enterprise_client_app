@@ -17,7 +17,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCcCL5N2ns_9d8TVhbSnyVCszXXVJ3AiFQ',
-    appId: '1:690647262004:android:dc684524168cdeaf3a3b61',
+    appId: '1:690647262004:android:25ca98382f7983723a3b61',
     messagingSenderId: '690647262004',
     projectId: 'whats-deleted-8ca7b',
     databaseURL: 'https://whats-deleted-8ca7b.firebaseio.com',

@@ -19,8 +19,20 @@ class AuthErrorMapper {
         return 'Too many attempts. Please wait a few moments before trying again.';
       case 'network-request-failed':
         return 'Unable to connect. Please check your internet connection.';
+      case 'email-already-in-use':
+        return 'An account is already registered with this mobile number. Please log in.';
+      case 'weak-password':
+        return 'The password is too weak. Please use at least 6 characters.';
       case 'invalid-email':
         return 'Invalid mobile format for authentication.';
+      case 'invalid-phone-number':
+        return 'Enter a valid 10-digit Indian mobile number.';
+      case 'quota-exceeded':
+        return 'SMS quota exceeded for today. Please try again later.';
+      case 'session-expired':
+        return 'The verification session has expired. Please request a new OTP.';
+      case 'invalid-verification-code':
+        return 'The entered OTP is incorrect. Please verify and try again.';
       default:
         if (exception.message != null && exception.message!.isNotEmpty) {
           return exception.message!;
@@ -65,14 +77,20 @@ class ClientAccessDeniedException extends AuthException {
 }
 
 class ClientNotApprovedException extends AuthException {
-  ClientNotApprovedException(String status)
+  final String status;
+
+  ClientNotApprovedException(this.status)
       : super(
           status.toLowerCase() == 'pending'
-              ? 'Your account approval is pending. Please wait for administrator verification.'
+              ? 'Your registration is still awaiting Owner approval. You can log in once your account has been approved.'
               : status.toLowerCase() == 'rejected'
-                  ? 'Your account registration request has been rejected. Please contact support.'
+                  ? 'Your registration request has not been approved. Please contact Amarnath Enterprise for assistance.'
                   : 'Your account status is "$status". Approval is required to access your account.',
-          code: 'not-approved',
+          code: status.toLowerCase() == 'pending'
+              ? 'approval-pending'
+              : status.toLowerCase() == 'rejected'
+                  ? 'approval-rejected'
+                  : 'not-approved',
         );
 }
 
@@ -82,4 +100,11 @@ class MissingUserRecordException extends AuthException {
           'No client profile record found for this account. Please contact support.',
           code: 'missing-user-record',
         );
+}
+
+class ClientSessionRestorationException extends AuthException {
+  const ClientSessionRestorationException([
+    super.message =
+        'Password was updated successfully, but session could not be restored automatically. Please log in with your new password.',
+  ]) : super(code: 'session-restoration-failed');
 }

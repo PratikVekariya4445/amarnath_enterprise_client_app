@@ -16,13 +16,13 @@ void main() {
       final pendingEx = ClientNotApprovedException('pending');
       expect(
         pendingEx.message,
-        'Your account approval is pending. Please wait for administrator verification.',
+        'Your registration is still awaiting Owner approval. You can log in once your account has been approved.',
       );
 
       final rejectedEx = ClientNotApprovedException('rejected');
       expect(
         rejectedEx.message,
-        'Your account registration request has been rejected. Please contact support.',
+        'Your registration request has not been approved. Please contact Amarnath Enterprise for assistance.',
       );
 
       final otherEx = ClientNotApprovedException('suspended');

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:amarnath_enterprise_client_app/core/constants/app_constants.dart';
+import 'package:amarnath_enterprise_client_app/core/errors/auth_error_mapper.dart';
+import 'package:amarnath_enterprise_client_app/core/notifications/notification_service.dart';
 import 'package:amarnath_enterprise_client_app/core/utils/responsive_utils.dart';
 import 'package:amarnath_enterprise_client_app/core/theme/app_colors.dart';
 import 'package:amarnath_enterprise_client_app/core/utils/mobile_number_utils.dart';
@@ -18,6 +22,7 @@ class LoginScreen extends StatefulWidget {
     this.onLoginSuccess,
     this.onForgotPassword,
     this.onSignUp,
+    this.initialMessage,
   });
 
   /// Injected repository (defaults to [AuthRepositoryImpl]).
@@ -31,6 +36,9 @@ class LoginScreen extends StatefulWidget {
 
   /// Optional callback when "Sign Up" is tapped.
   final VoidCallback? onSignUp;
+
+  /// Optional message to display on entry (e.g. from splash session check).
+  final String? initialMessage;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -59,6 +67,14 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _authRepository = widget.authRepository ?? AuthRepositoryImpl();
     _loadRememberedCredentials();
+
+    if (widget.initialMessage != null && widget.initialMessage!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showErrorSnackBar(widget.initialMessage!);
+        }
+      });
+    }
   }
 
   Future<void> _loadRememberedCredentials() async {
@@ -117,6 +133,9 @@ class _LoginScreenState extends State<LoginScreen> {
         mobile: mobile,
       );
 
+      // Register Client FCM token after approved login
+      await NotificationService.instance.registerCurrentClientToken();
+
       if (!mounted) return;
 
       if (widget.onLoginSuccess != null) {
@@ -125,6 +144,15 @@ class _LoginScreenState extends State<LoginScreen> {
         // Default navigation: replace with dashboard / home
         Navigator.of(context).pushReplacementNamed('/home');
       }
+    } on ClientNotApprovedException catch (e) {
+      if (!mounted) return;
+      if (e.status.toLowerCase() == 'pending') {
+        await _showPendingApprovalDialog();
+      } else if (e.status.toLowerCase() == 'rejected') {
+        await _showRejectedApprovalDialog();
+      } else {
+        _showErrorSnackBar(e.message);
+      }
     } catch (e) {
       if (!mounted) return;
       _showErrorSnackBar(e.toString());
@@ -132,6 +160,236 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _showPendingApprovalDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.dp),
+          ),
+          icon: Icon(
+            Icons.schedule_rounded,
+            color: AppColors.primaryDarkGreen,
+            size: 48.dp,
+          ),
+          title: Text(
+            'Approval Pending',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textDark,
+            ),
+          ),
+          content: Text(
+            'Your registration is still awaiting Owner approval. You can log in once your account has been approved.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.5.sp,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          actionsPadding: EdgeInsets.only(
+            left: 18.dp,
+            right: 18.dp,
+            bottom: 18.dp,
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed('/signup-pending');
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(
+                        color: AppColors.primaryDarkGreen,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.dp),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 10.dp),
+                    ),
+                    child: Text(
+                      'Contact Owner',
+                      style: TextStyle(
+                        fontSize: 11.5.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryDarkGreen,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.dp),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryDarkGreen,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14.dp),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 10.dp),
+                    ),
+                    child: Text(
+                      'OK',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showRejectedApprovalDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.dp),
+          ),
+          icon: Icon(
+            Icons.cancel_outlined,
+            color: Colors.redAccent,
+            size: 48.dp,
+          ),
+          title: Text(
+            'Registration Not Approved',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textDark,
+            ),
+          ),
+          content: Text(
+            'Your registration request has not been approved. Please contact Amarnath Enterprise for assistance.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12.5.sp,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          actionsPadding: EdgeInsets.only(
+            left: 18.dp,
+            right: 18.dp,
+            bottom: 18.dp,
+          ),
+          actions: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _callOwner();
+                        },
+                        icon: Icon(Icons.call_rounded, size: 16.dp),
+                        label: Text(
+                          'Call Owner',
+                          style: TextStyle(fontSize: 11.sp),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(
+                            color: AppColors.primaryDarkGreen,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14.dp),
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 10.dp),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 8.dp),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _openWhatsApp();
+                        },
+                        icon: Icon(Icons.chat_bubble_outline_rounded,
+                            size: 16.dp),
+                        label: Text(
+                          'WhatsApp Us',
+                          style: TextStyle(fontSize: 11.sp),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF25D366),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14.dp),
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 10.dp),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.dp),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _callOwner() async {
+    final number = await _authRepository.getOwnerContactNumber();
+    final clean = number.replaceAll(RegExp(r'[^0-9+]'), '');
+    final uri = Uri(scheme: 'tel', path: clean);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        if (!mounted) return;
+        _showErrorSnackBar('Could not launch phone dialer for $number');
+      }
+    } catch (_) {
+      if (!mounted) return;
+      _showErrorSnackBar('Could not launch phone dialer for $number');
+    }
+  }
+
+  Future<void> _openWhatsApp() async {
+    final number = await _authRepository.getOwnerContactNumber();
+    final digits = number.replaceAll(RegExp(r'[^0-9]'), '');
+    final msg = Uri.encodeComponent(AppConstants.registrationInquiryMessage);
+    final uri = Uri.parse('https://wa.me/$digits?text=$msg');
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (!mounted) return;
+        _showErrorSnackBar('Could not launch WhatsApp for $number');
+      }
+    } catch (_) {
+      if (!mounted) return;
+      _showErrorSnackBar('Could not launch WhatsApp for $number');
     }
   }
 
@@ -164,17 +422,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-          'Password reset service: Please contact Amarnath Enterprise support.',
-        ),
-        backgroundColor: AppColors.primaryDarkGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: EdgeInsets.all(16.dp),
-      ),
-    );
+    Navigator.of(context).pushNamed('/forgot-password');
   }
 
   void _handleSignUp() {
@@ -182,18 +430,7 @@ class _LoginScreenState extends State<LoginScreen> {
       widget.onSignUp!();
       return;
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-          'Client Registration: Sign up request module will open.',
-        ),
-        backgroundColor: AppColors.primaryDarkGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: EdgeInsets.all(16.dp),
-      ),
-    );
+    Navigator.of(context).pushNamed('/signup');
   }
 
   @override

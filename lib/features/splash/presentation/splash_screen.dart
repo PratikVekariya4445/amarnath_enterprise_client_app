@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:amarnath_enterprise_client_app/core/notifications/notification_service.dart';
 import 'package:amarnath_enterprise_client_app/core/utils/responsive_utils.dart';
+import 'package:amarnath_enterprise_client_app/features/auth/domain/repositories/auth_repository.dart';
 import 'package:amarnath_enterprise_client_app/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:amarnath_enterprise_client_app/features/auth/presentation/login_screen.dart';
+import 'package:amarnath_enterprise_client_app/features/home/presentation/home_screen.dart';
 
 /// Splash Screen for Amarnath Enterprise Client App.
 ///
@@ -18,10 +21,14 @@ class SplashScreen extends StatefulWidget {
   /// Defaults to 2.5 seconds (within the 2–3s requirement).
   final Duration duration;
 
+  /// Optional auth repository (defaults to [AuthRepositoryImpl]).
+  final AuthRepository? authRepository;
+
   const SplashScreen({
     super.key,
     this.nextScreen,
     this.duration = const Duration(milliseconds: 2500),
+    this.authRepository,
   });
 
   @override
@@ -64,10 +71,19 @@ class _SplashScreenState extends State<SplashScreen> {
     if (widget.nextScreen != null) {
       destination = widget.nextScreen!;
     } else {
-      // Check existing authenticated client session
-      final client = await AuthRepositoryImpl().getCurrentApprovedClient();
-      if (client != null) {
-        destination = const _DefaultPlaceholderScreen();
+      final authRepo = widget.authRepository ?? AuthRepositoryImpl();
+      final sessionResult = await authRepo.validateStartupSession();
+
+      if (sessionResult.isApproved) {
+        try {
+          await NotificationService.instance.registerCurrentClientToken();
+        } catch (_) {}
+        destination = const HomeScreen();
+      } else if (sessionResult.status == SessionStatus.pending) {
+        destination = LoginScreen(
+          initialMessage: sessionResult.message ??
+              'Your registration is still awaiting Owner approval. You can log in once your account has been approved.',
+        );
       } else {
         destination = const LoginScreen();
       }
@@ -153,29 +169,6 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Fallback placeholder screen if no nextScreen is supplied and no existing
-/// authentication/home route is hooked up yet.
-class _DefaultPlaceholderScreen extends StatelessWidget {
-  const _DefaultPlaceholderScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Amarnath Enterprise Client'),
-        backgroundColor: const Color(0xFF015734),
-        foregroundColor: Colors.white,
-      ),
-      body: const Center(
-        child: Text(
-          'Amarnath Enterprise Client App',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
         ),
       ),
     );

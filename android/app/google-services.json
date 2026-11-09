@@ -1,0 +1,145 @@
+{
+  "project_info": {
+    "project_number": "690647262004",
+    "firebase_url": "https://whats-deleted-8ca7b.firebaseio.com",
+    "project_id": "whats-deleted-8ca7b",
+    "storage_bucket": "whats-deleted-8ca7b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690647262004:android:25ca98382f7983723a3b61",
+        "android_client_info": {
+          "package_name": "com.amarnath.enterprise.client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcCL5N2ns_9d8TVhbSnyVCszXXVJ3AiFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690647262004:android:dc684524168cdeaf3a3b61",
+        "android_client_info": {
+          "package_name": "com.amarnath.enterprise.owner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcCL5N2ns_9d8TVhbSnyVCszXXVJ3AiFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690647262004:android:4cc32fe3beced73a3a3b61",
+        "android_client_info": {
+          "package_name": "com.dynamicdevs.kidsearlylearning"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcCL5N2ns_9d8TVhbSnyVCszXXVJ3AiFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690647262004:android:c5b14318ca1a17243a3b61",
+        "android_client_info": {
+          "package_name": "com.ethnic.collection.vkweddingcollection"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcCL5N2ns_9d8TVhbSnyVCszXXVJ3AiFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690647262004:android:fe3a49ec0f4394393a3b61",
+        "android_client_info": {
+          "package_name": "com.homefitness.workout360"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcCL5N2ns_9d8TVhbSnyVCszXXVJ3AiFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690647262004:android:831d0158916e1f0a3a3b61",
+        "android_client_info": {
+          "package_name": "com.posterlab.postermaker.thumbnailmaker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcCL5N2ns_9d8TVhbSnyVCszXXVJ3AiFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:690647262004:android:c69c439b5cf39f223a3b61",
+        "android_client_info": {
+          "package_name": "com.recovery.message.wa.deleted.messages"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcCL5N2ns_9d8TVhbSnyVCszXXVJ3AiFQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      },
+      "admob_app_id": "ca-app-pub-3275290553611147~4946221376"
+    }
+  ],
+  "configuration_version": "1"
+}
